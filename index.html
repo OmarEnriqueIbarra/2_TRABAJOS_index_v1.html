@@ -155,7 +155,10 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
     <label style="font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em">Soy:</label>
     <select id="selTec" onchange="onTecChange()" style="min-width:260px;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px">
       <option value="">— Seleccionar técnico —</option>
+      <option value="__otro__">✏️ Otro / Personal de Intendencia</option>
     </select>
+    <input type="text" id="selTecOtro" placeholder="Escribí tu nombre..." style="display:none;min-width:220px;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px">
+    <button class="btn-o btn-sm" id="btnConfTecOtro" style="display:none" onclick="confirmarTecOtro()">Confirmar</button>
     <div style="flex:1"></div>
     <div style="font-size:11px;color:var(--mu)" id="tecStats"></div>
   </div>
@@ -276,9 +279,11 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
     <div class="fg" style="margin-bottom:0">
       <div class="fg-full">
         <label class="fl">Asignar a</label>
-        <select id="a_tecnico" class="fi">
+        <select id="a_tecnico" class="fi" onchange="onAsignarTecChange()">
           <option value="">— Seleccionar técnico —</option>
+          <option value="__otro__">✏️ Otro / Personal de Intendencia</option>
         </select>
+        <input type="text" id="a_tecnicoOtro" class="fi" placeholder="Escribí el nombre de la persona..." style="display:none;margin-top:8px">
       </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--br);margin-top:14px">
@@ -360,7 +365,7 @@ function nomSup(leg){ var s=SUPERVISORES.find(function(x){return x.leg===leg;});
 function iniSup(leg){ var s=SUPERVISORES.find(function(x){return x.leg===leg;}); return s?s.ini:'?'; }
 
 // ═══ Conexión con Google Sheets (tiempo real) ═══
-var APPS_SCRIPT_URL = 'PEGAR_ACA_LA_URL_DEL_APPS_SCRIPT_DE_TRABAJOS';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3kvxit-_S5BzQvwTO_y6ggB3Fsvs2A_P-SOzlZOLt2GzXKbs7O8eVopLwP5vSpCU/exec';
 
 function sincronizar(action, params){
   try{
@@ -563,8 +568,38 @@ function descargarPlantilla(){
 
 // ── VISTA TECNICO ──
 function onTecChange(){
-  var leg=document.getElementById('selTec').value;
+  var val=document.getElementById('selTec').value;
+  var otroInput=document.getElementById('selTecOtro');
+  var otroBtn=document.getElementById('btnConfTecOtro');
+  if(val==='__otro__'){
+    otroInput.style.display='inline-block';
+    otroBtn.style.display='inline-block';
+    otroInput.value='';
+    otroInput.focus();
+    document.getElementById('tecAvatar').textContent='—';
+    document.getElementById('wTec').innerHTML='<div class="empty"><div class="ic">👷</div>Escribí tu nombre y tocá "Confirmar".</div>';
+    document.getElementById('tecStats').textContent='';
+    return;
+  }
+  otroInput.style.display='none';
+  otroBtn.style.display='none';
+  var leg=val;
   document.getElementById('tecAvatar').textContent=leg?iniTec(leg):'—';
+  renderVistaTec();
+}
+
+function confirmarTecOtro(){
+  var nombre=document.getElementById('selTecOtro').value.trim();
+  if(!nombre){toast('Escribí tu nombre','#d29922');return;}
+  // Usamos el nombre escrito como "leg" efectivo — nomTec()/iniTec() ya devuelven
+  // el mismo texto si no encuentran a esa persona en la lista de técnicos.
+  var opt=document.createElement('option');
+  opt.value=nombre; opt.textContent='✏️ '+nombre;
+  document.getElementById('selTec').appendChild(opt);
+  document.getElementById('selTec').value=nombre;
+  document.getElementById('selTecOtro').style.display='none';
+  document.getElementById('btnConfTecOtro').style.display='none';
+  document.getElementById('tecAvatar').textContent=nombre.slice(0,2).toUpperCase();
   renderVistaTec();
 }
 
@@ -579,7 +614,7 @@ function renderVistaTec(){
   if(!disponibles.length){el.innerHTML='<div class="empty"><div class="ic">✅</div>No tenés trabajos asignados pendientes.</div>';return;}
   var tec=TECNICOS.find(function(t){return t.leg===leg;});
   var nuevos=disponibles.filter(function(t){return !t.vistoPorTecnico;});
-  var html='<div style="font-size:12px;color:var(--mu);margin-bottom:14px">Trabajos disponibles para <strong style="color:var(--tx)">'+tec.ap+', '+tec.nom+'</strong></div>';
+  var html='<div style="font-size:12px;color:var(--mu);margin-bottom:14px">Trabajos disponibles para <strong style="color:var(--tx)">'+nomTec(leg)+'</strong></div>';
   if(nuevos.length){
     html+='<div style="background:#fff3cd;border:1.5px solid #f0c14b;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700;color:#8a6100">🔔 Tenés '+nuevos.length+' trabajo(s) nuevo(s) asignado(s) por el supervisor.</div>';
   }
@@ -635,7 +670,7 @@ function abrirTomar(id,leg){
     '<div style="background:var(--s2);border-radius:8px;padding:14px;margin-bottom:12px">'+ 
       '<div style="font-weight:600;margin-bottom:4px">'+t.desc+'</div>'+
       (t.sector?'<div style="font-size:11px;color:var(--mu)">📍 '+t.sector+'</div>':'')+
-      '<div style="font-size:11px;color:var(--mu);margin-top:4px">Técnico: '+tec.ap+', '+tec.nom+'</div>'+
+      '<div style="font-size:11px;color:var(--mu);margin-top:4px">Técnico: '+nomTec(leg)+'</div>'+
     '</div>'+prevHtml;
   document.getElementById('t_quehizo').value=t.quehizo||'';
   document.getElementById('t_freali').value=t.freali||today();
@@ -730,7 +765,7 @@ function renderTodos(){
     var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
     var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':'👥 Ter';
     var ebd=t.estado==='Pendiente'?'bd-pen':t.estado==='En proceso'?'bd-pro':t.estado==='A continuar'?'bd-cont':'bd-fin';
-    var asig=t.tipo==='Tercero'?(t.tercero||'—'):t.tipo==='Intendencia'?'Intendencia':(t.tecnico?nomTec(t.tecnico).split(',')[0]:'Sin asignar');
+    var asig=t.tipo==='Tercero'?(t.tercero||'—'):(t.tecnico?nomTec(t.tecnico).split(',')[0]:(t.tipo==='Intendencia'?'Intendencia':'Sin asignar'));
     return '<tr>'+
       '<td style="font-family:Space Mono,monospace;font-size:10px;color:var(--mu)">#'+String(t.id).padStart(4,'0')+'</td>'+
       '<td style="max-width:260px"><div style="font-weight:500">'+t.desc+'</div>'+(t.sector?'<div style="font-size:10px;color:var(--mu)">'+t.sector+'</div>':'')+'</td>'+
@@ -1054,16 +1089,22 @@ function abrirAsignar(id){
   document.getElementById('mAsignar').classList.add('open');
 }
 
+function onAsignarTecChange(){
+  var val=document.getElementById('a_tecnico').value;
+  document.getElementById('a_tecnicoOtro').style.display = val==='__otro__' ? 'block' : 'none';
+  if(val==='__otro__') document.getElementById('a_tecnicoOtro').focus();
+}
+
 function confirmarAsignar(){
-  var leg=document.getElementById('a_tecnico').value;
-  if(!leg){toast('Seleccioná un técnico','#d29922');return;}
+  var sel=document.getElementById('a_tecnico').value;
+  var leg = sel==='__otro__' ? document.getElementById('a_tecnicoOtro').value.trim() : sel;
+  if(!leg){toast(sel==='__otro__'?'Escribí el nombre de la persona':'Seleccioná un técnico','#d29922');return;}
   var idx=TRABAJOS.findIndex(function(t){return t.id===ASIGNAR_ID;}); if(idx<0)return;
-  var tec=TECNICOS.find(function(x){return x.leg===leg;});
   TRABAJOS[idx].tecnico=leg;
   TRABAJOS[idx].vistoPorTecnico=false;
   closeM('mAsignar');
   renderTodos();
-  toast('✅ Asignado a '+tec.ap+', '+tec.nom);
+  toast('✅ Asignado a '+nomTec(leg));
   sincronizar('asignar', {id:ASIGNAR_ID, tecnico:leg});
 }
 
