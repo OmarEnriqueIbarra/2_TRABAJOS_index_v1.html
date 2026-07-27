@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro de Trabajos — Mantenimiento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+:root{--bg:#5a5a5a;--s1:#4a4a4a;--s2:#525252;--s3:#5e5e5e;--br:#686868;--br2:#787878;--tx:#ffffff;--mu:#dddddd;--mu2:#cccccc;--ac:#b8785a;--gn:#4a9e5c;--yl:#a88a3a;--rd:#b85550;--or:#c07848;--pu:#9070c0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;}
+.hdr{background:var(--s1);border-bottom:1px solid var(--br);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}
+.hdr-c .ey{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-bottom:3px;}
+.hdr-c h1{font-size:18px;font-weight:800;}
+.hdr-c h1 span{color:var(--ac);}
+.hdr-r{display:flex;gap:8px;align-items:center;}
+.tabs{background:var(--s1);border-bottom:1px solid var(--br);display:flex;padding:0 32px;}
+.tab{background:none;border:none;color:var(--mu);cursor:pointer;padding:12px 20px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab:hover{color:var(--tx);}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac);}
+.pnl{display:none;}
+.pnl.on{display:block;}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 32px;}
+.slbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--br);}
+.btn{background:var(--ac);color:#fff;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn:hover{opacity:.85;}
+.btn-gn{background:var(--gn);color:#0d1117;}
+.btn-o{background:var(--s2);color:var(--mu);border:1px solid var(--br);border-radius:7px;padding:9px 16px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn-o:hover{color:var(--tx);}
+.btn-sm{padding:6px 12px;font-size:11px;}
+.btn-xs{padding:4px 9px;font-size:10px;border-radius:5px;}
+.imp-zone{border:2px dashed var(--br2);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;}
+.imp-zone:hover,.imp-zone.drag{border-color:var(--ac);background:rgba(184,120,90,.04);}
+.imp-zone h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.imp-zone p{font-size:12px;color:var(--mu);}
+.imp-log{background:var(--s1);border:1px solid var(--br);border-radius:8px;padding:14px;display:none;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--mu);line-height:2;max-height:120px;overflow-y:auto;}
+.imp-log .ok{color:var(--gn);}
+.imp-log .er{color:var(--rd);}
+.krow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;}
+.kc{background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kc-tot::before{background:var(--ac);}
+.kc-pen::before{background:var(--yl);}
+.kc-pro::before{background:var(--or);}
+.kc-fin::before{background:var(--gn);}
+.kc-his::before{background:var(--pu);}
+.kl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.kv{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;}
+.kc-tot .kv{color:var(--ac);}
+.kc-pen .kv{color:var(--yl);}
+.kc-pro .kv{color:var(--or);}
+.kc-fin .kv{color:var(--gn);}
+.kc-his .kv{color:var(--pu);}
+.ks{font-size:10px;color:var(--mu);margin-top:2px;}
+.fbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:12px 16px;}
+.fbar input,.fbar select{background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:6px 10px;}
+.tbl-wrap{background:var(--s1);border:1px solid var(--br);border-radius:10px;overflow:hidden;margin-bottom:24px;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl thead tr{background:var(--s2);}
+.tbl th{padding:9px 13px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);font-weight:600;border-bottom:1px solid var(--br);text-align:left;white-space:nowrap;}
+.tbl td{padding:9px 13px;border-bottom:1px solid var(--br);vertical-align:middle;}
+.tbl tbody tr:hover td{background:var(--s2);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.bd{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap;}
+.bd-mec{background:rgba(184,85,80,.12);color:var(--rd);}
+.bd-elec{background:rgba(192,120,72,.12);color:var(--or);}
+.bd-amb{background:rgba(184,120,90,.12);color:var(--ac);}
+.bd-ter{background:rgba(144,112,192,.12);color:var(--pu);}
+.bd-int{background:rgba(80,140,120,.12);color:#2e8a6e;}
+.bd-pen{background:rgba(168,138,58,.12);color:var(--yl);}
+.bd-pro{background:rgba(192,120,72,.12);color:var(--or);}
+.bd-fin{background:rgba(74,158,92,.12);color:var(--gn);}
+.bd-cont{background:rgba(100,140,200,.12);color:#58a6ff;}
+.bd-pa{background:rgba(184,85,80,.15);color:var(--rd);}
+.bd-pm{background:rgba(168,138,58,.12);color:var(--yl);}
+.bd-pb{background:rgba(74,158,92,.10);color:var(--gn);}
+.tec-sel{background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.tec-avatar{width:38px;height:38px;border-radius:50%;background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0;}
+.trab-card{background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:16px 18px;margin-bottom:10px;transition:border-color .15s;}
+.trab-card:hover{border-color:var(--br2);}
+.trab-card.tomado{border-color:var(--or);}
+.ch2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+.card{background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:20px;}
+.card h3{font-size:13px;font-weight:700;margin-bottom:3px;}
+.card p{font-size:11px;color:var(--mu);margin-bottom:14px;}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--br);border-radius:12px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:26px;}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-hdr h3{font-size:15px;font-weight:700;}
+.mc{background:none;border:none;color:var(--mu);cursor:pointer;font-size:22px;line-height:1;}
+.mc:hover{color:var(--tx);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.fg-full{grid-column:span 2;}
+.fl{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;}
+.fi{width:100%;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 11px;}
+.fi:focus{outline:none;border-color:var(--ac);}
+textarea.fi{resize:vertical;min-height:70px;line-height:1.5;}
+input[type=date],input[type=time]{color-scheme:dark;}
+input[type=date]::-webkit-calendar-picker-indicator,
+input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(2);cursor:pointer;opacity:.75;}
+.empty{text-align:center;padding:48px 20px;color:var(--mu);}
+.empty .ic{font-size:40px;margin-bottom:10px;}
+.tst{position:fixed;bottom:24px;right:24px;padding:10px 16px;border-radius:8px;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;z-index:300;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;}
+.tst.show{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-c">
+    <div class="ey">Mantenimiento · Trabajos Diarios</div>
+    <h1>Registro de <span>Trabajos</span></h1>
+  </div>
+  <div class="hdr-r">
+    <span id="supBadge" style="display:none;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;background:rgba(184,120,90,.15);color:var(--ac)">⭐ <span id="supNom">Supervisor</span></span>
+    <button class="btn-o btn-sm" id="btnSupAcceso" onclick="abrirSupSelector()" style="border-color:var(--ac);color:var(--ac)">⭐ Acceso Supervisor</button>
+    <button class="btn-o btn-sm" id="btnSupSalir" onclick="salirSupervisor()" style="display:none">↩ Salir supervisor</button>
+    <button class="btn-o btn-sm" onclick="expHistorial()">⬇ Exportar finalizados</button>
+    <button class="btn btn-sm" id="btnNuevo" onclick="openNuevo()" style="display:none">+ Nuevo trabajo</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" id="t0" onclick="goTab(0)" style="opacity:.35;pointer-events:none" title="Solo supervisores">📋 Todos</button>
+  <button class="tab"    id="t1" onclick="goTab(1)">🔧 Vista Técnico</button>
+  <button class="tab"    id="t2" onclick="goTab(2)">✅ Finalizados</button>
+  <button class="tab"    id="t3" onclick="goTab(3)">📊 Estadísticas</button>
+  <button class="tab"    id="t4" onclick="goTab(4)">📂 Importar</button>
+</div>
+<div style="padding:6px 20px;font-size:11px;color:var(--mu)" id="estadoSync">Conectando con la planilla...</div>
+
+<!-- TAB 0: TODOS -->
+<div id="p0" class="pnl on">
+<div class="wrap">
+  <div class="krow" id="krow2"></div>
+  <div class="fbar">
+    <input type="text" id="srch2" placeholder="🔍 Buscar..." oninput="renderTodos()">
+    <select id="fTipo2" onchange="renderTodos()" style="min-width:130px"><option value="">Todos los tipos</option><option>Mecanico</option><option>Electrico</option><option>Ambos</option><option>Tercero</option></select>
+    <select id="fEst2" onchange="renderTodos()" style="min-width:130px"><option value="">Todos los estados</option><option>Pendiente</option><option>En proceso</option><option>Finalizado</option></select>
+    <div style="flex:1"></div>
+    <span id="cnt2" style="font-size:11px;color:var(--mu)"></span>
+  </div>
+  <div id="wTodos2"></div>
+</div>
+</div>
+
+<!-- TAB 1: VISTA TECNICO -->
+<div id="p1" class="pnl">
+<div class="wrap">
+  <div class="tec-sel">
+    <div class="tec-avatar" id="tecAvatar">—</div>
+    <label style="font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em">Soy:</label>
+    <select id="selTec" onchange="onTecChange()" style="min-width:260px;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px">
+      <option value="">— Seleccionar técnico —</option>
+    </select>
+    <div style="flex:1"></div>
+    <div style="font-size:11px;color:var(--mu)" id="tecStats"></div>
+  </div>
+  <div id="wTec"><div class="empty"><div class="ic">👷</div>Seleccioná tu nombre para ver los trabajos disponibles.</div></div>
+</div>
+</div>
+
+<!-- TAB 2: FINALIZADOS -->
+<div id="p2" class="pnl">
+<div class="wrap">
+  <div class="fbar">
+    <select id="hfTec" onchange="renderHistorial()" style="min-width:200px"><option value="">Todos los técnicos</option></select>
+    <select id="hfTipo" onchange="renderHistorial()" style="min-width:130px"><option value="">Todos los tipos</option><option>Mecanico</option><option>Electrico</option><option>Ambos</option><option>Tercero</option></select>
+    <input type="month" id="hfMes" onchange="renderHistorial()" style="background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;padding:6px 10px;color-scheme:dark">
+    <div style="flex:1"></div>
+    <span id="hCnt" style="font-size:11px;color:var(--mu)"></span>
+  </div>
+  <div id="wHist"></div>
+</div>
+</div>
+
+<!-- TAB 3: ESTADÍSTICAS -->
+<div id="p3" class="pnl">
+<div class="wrap">
+  <div class="ch2">
+    <div class="card">
+      <h3>Trabajos por técnico</h3>
+      <p>Tomados vs finalizados por cada técnico</p>
+      <div style="position:relative;height:280px"><canvas id="chTec"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Distribución por tipo</h3>
+      <p>Mecánico · Eléctrico · Ambos · Tercero</p>
+      <div style="position:relative;height:280px"><canvas id="chTipo"></canvas></div>
+    </div>
+  </div>
+  <div class="ch2">
+    <div class="card">
+      <h3>Estado actual de trabajos</h3>
+      <p>Pendiente · En proceso · Finalizado</p>
+      <div style="position:relative;height:240px"><canvas id="chEst"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Tiempo promedio de trabajo</h3>
+      <p>Por técnico — horas registradas</p>
+      <div style="position:relative;height:240px"><canvas id="chTime"></canvas></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- TAB 4: IMPORTAR -->
+<div id="p4" class="pnl">
+<div class="wrap">
+  <div class="slbl">Importar trabajos desde Excel</div>
+  <div id="dropZ" class="imp-zone">
+    <div style="font-size:42px;margin-bottom:8px">📂</div>
+    <h3>Arrastrá el Excel aquí o hacé clic para seleccionar</h3>
+    <p>Columnas: <strong>Descripcion · Tipo · Prioridad · Sector · Fecha Solicitud</strong></p>
+    <input type="file" id="fImp" accept=".xlsx,.xls" style="display:none">
+  </div>
+  <div class="imp-log" id="impLog"></div>
+  <div style="margin-top:14px;display:flex;gap:8px">
+    <button class="btn-o btn-sm" onclick="descargarPlantilla()">⬇ Descargar plantilla</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL SUPERVISOR -->
+<div class="modal-ov" id="mSupSel">
+  <div class="modal" style="width:400px">
+    <div class="modal-hdr"><h3>Acceso Supervisor</h3><button class="mc" onclick="closeM('mSupSel')">×</button></div>
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:36px;margin-bottom:12px">⭐</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:18px">Seleccioná tu nombre para acceder como supervisor</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-o" onclick="activarSupervisor('ZZ03359')" style="font-size:14px;padding:12px;border-color:var(--br2)">CORONEL, Matias Rodolfo</button>
+        <button class="btn-o" onclick="activarSupervisor('ZZ03072')" style="font-size:14px;padding:12px;border-color:var(--br2)">REYN, Luciano Benjamin</button>
+        <button class="btn-o" onclick="activarSupervisor('ZZ01604')" style="font-size:14px;padding:12px;border-color:var(--br2)">IBARRA, Omar Enrique</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TOMAR -->
+<div class="modal-ov" id="mTomar">
+  <div class="modal">
+    <div class="modal-hdr"><h3 id="mTomarTitle">Tomar trabajo</h3><button class="mc" onclick="closeM('mTomar')">×</button></div>
+    <div id="mTomarBody"></div>
+    <div class="fg" style="margin-top:14px">
+      <div class="fg-full">
+        <label class="fl">¿Qué se hizo?</label>
+        <textarea id="t_quehizo" class="fi" rows="4" placeholder="Describir detalladamente el trabajo realizado..."></textarea>
+      </div>
+      <div><label class="fl">Fecha de realización</label><input type="date" id="t_freali" class="fi"></div>
+      <div><label class="fl">Estado</label>
+        <select id="t_estado" class="fi"><option value="En proceso">En proceso</option><option value="A continuar">A continuar</option><option value="Finalizado">Finalizado</option></select>
+      </div>
+      <div><label class="fl">Hora inicio</label><input type="time" id="t_hini" class="fi" onchange="calcT()"></div>
+      <div><label class="fl">Hora fin</label><input type="time" id="t_hfin" class="fi" onchange="calcT()"></div>
+      <div id="t_tfield" style="display:none">
+        <label class="fl">Tiempo de trabajo</label>
+        <div style="background:var(--s2);border:1px solid var(--br);border-radius:6px;padding:9px 12px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--ac)" id="t_tval">—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--br)">
+      <button class="btn-o" onclick="closeM('mTomar')">Cancelar</button>
+      <button class="btn btn-gn" onclick="confirmarTomar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ASIGNAR TECNICO -->
+<div class="modal-ov" id="mAsignar">
+  <div class="modal" style="width:460px">
+    <div class="modal-hdr"><h3 id="mAsignarTitle">Asignar técnico</h3><button class="mc" onclick="closeM('mAsignar')">×</button></div>
+    <div id="mAsignarBody" style="margin-bottom:14px"></div>
+    <div class="fg" style="margin-bottom:0">
+      <div class="fg-full">
+        <label class="fl">Asignar a</label>
+        <select id="a_tecnico" class="fi">
+          <option value="">— Seleccionar técnico —</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--br);margin-top:14px">
+      <button class="btn-o" onclick="closeM('mAsignar')">Cancelar</button>
+      <button class="btn btn-gn" onclick="confirmarAsignar()">Asignar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR -->
+<div class="modal-ov" id="mNuevo">
+  <div class="modal">
+    <div class="modal-hdr"><h3 id="mNTitle">Nuevo trabajo</h3><button class="mc" onclick="closeM('mNuevo')">×</button></div>
+    <div class="fg">
+      <div class="fg-full"><label class="fl">Descripción *</label><textarea id="f_desc" class="fi" rows="3" placeholder="Describir el trabajo..."></textarea></div>
+      <div><label class="fl">Tipo *</label>
+        <select id="f_tipo" class="fi" onchange="onTipoChange()">
+          <option value="">— Seleccionar —</option>
+          <option value="Mecanico">🔩 Mecánico</option>
+          <option value="Electrico">⚡ Eléctrico</option>
+          <option value="Ambos">🔩⚡ Ambos</option>
+          <option value="Intendencia">🧹 Intendencia</option>
+          <option value="Tercero">👥 Tercero</option>
+        </select>
+      </div>
+      <div><label class="fl">Prioridad</label>
+        <select id="f_prio" class="fi"><option value="Media">Media</option><option value="Alta">Alta</option><option value="Baja">Baja</option></select>
+      </div>
+      <div><label class="fl">Sector</label><input type="text" id="f_sector" class="fi" placeholder="Ej: Depósito, Taller..."></div>
+      <div><label class="fl">Fecha de solicitud</label><input type="date" id="f_fpedido" class="fi"></div>
+      <div id="grp_ter" style="display:none"><label class="fl">Empresa tercera</label>
+        <input type="text" id="f_tercero" class="fi" placeholder="Nombre de la empresa">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid var(--br)">
+      <button class="btn-o" onclick="closeM('mNuevo')">Cancelar</button>
+      <button class="btn btn-gn" onclick="guardarTrabajo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tst" id="tst"></div>
+
+<script>
+var TRABAJOS = [];
+var HISTORIAL = [];
+var EDIT_ID = null;
+var TOMAR_ID = null;
+var TOMAR_TEC = null;
+var sCH = {};
+
+var TECNICOS = [
+  {leg:'ZZ03233',ini:'AFQ',ap:'RUIZ AQUINO',nom:'ALBERTO FEDERICO'},
+  {leg:'ZZ03253',ini:'BEC',ap:'BERTANI',nom:'CHRISTIAN ALBERTO'},
+  {leg:'ZZ03396',ini:'BEE',ap:'BARREYRO',nom:'EMILIANO EZEQUIEL'},
+  {leg:'ZZ02893',ini:'DFG',ap:'DEANDREA',nom:'FABIAN GUILLERMO'},
+  {leg:'ZZ02835',ini:'DMZ',ap:'MANSILO ZANON',nom:'DIEGO HERNAN'},
+  {leg:'ZZ02981',ini:'GPA',ap:'GONZALEZ',nom:'PASCUAL ADRIAN'},
+  {leg:'ZZ03391',ini:'JIS',ap:'ISNARDO',nom:'JAVIER RAUL'},
+  {leg:'ZZ02753',ini:'LJM',ap:'MORALES',nom:'LUIS JAVIER'},
+  {leg:'ZZ02522',ini:'LRM',ap:'LUJAN',nom:'RAMON MANUEL'},
+  {leg:'ZZ02832',ini:'MJL',ap:'LUNA',nom:'MARIANO JAVIER'},
+  {leg:'ZZ02620',ini:'MRB',ap:'BRUSA',nom:'MARCELO ADRIAN'},
+  {leg:'ZZ02400',ini:'OEF',ap:'FERNANDEZ',nom:'JORGE ERNESTO'},
+  {leg:'ZZ02390',ini:'REG',ap:'GRASSO',nom:'MARIANO EDUARDO'},
+  {leg:'ZZ01400',ini:'REM',ap:'MARTINEZ',nom:'RUBEN ERNESTO'},
+  {leg:'ZZ01268',ini:'DOP',ap:'PEREZ',nom:'DANIEL OSVALDO'},
+  {leg:'ZZ01120',ini:'PGF',ap:'PENALBA',nom:'GABRIELA FERNANDA'}
+];
+
+var SUPERVISORES = [
+  {leg:'ZZ03359',ini:'MTF',ap:'CORONEL',nom:'MATIAS RODOLFO'},
+  {leg:'ZZ03072',ini:'LBR',ap:'REYN',nom:'LUCIANO BENJAMIN'},
+  {leg:'ZZ01604',ini:'OEI',ap:'IBARRA',nom:'OMAR ENRIQUE'}
+];
+
+function esSupervisor(leg){ return SUPERVISORES.some(function(s){return s.leg===leg;}); }
+function nomSup(leg){ var s=SUPERVISORES.find(function(x){return x.leg===leg;}); return s?s.ap+', '+s.nom:''; }
+function iniSup(leg){ var s=SUPERVISORES.find(function(x){return x.leg===leg;}); return s?s.ini:'?'; }
+
+// ═══ Conexión con Google Sheets (tiempo real) ═══
+var APPS_SCRIPT_URL = 'PEGAR_ACA_LA_URL_DEL_APPS_SCRIPT_DE_TRABAJOS';
+
+function sincronizar(action, params){
+  try{
+    var payload = {action: action};
+    for(var k in params){ payload[k] = params[k]; }
+    fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)})
+      .then(function(){ marcarSincronizado(true); })
+      .catch(function(err){ marcarSincronizado(false, err && err.message); });
+  }catch(err){
+    marcarSincronizado(false, 'Error antes de enviar: '+(err&&err.message));
+  }
+}
+function marcarSincronizado(ok, msg){
+  var el=document.getElementById('estadoSync');
+  if(!el) return;
+  el.textContent = ok ? '✓ Sincronizado '+new Date().toLocaleTimeString() : '⚠️ Error al sincronizar: '+(msg||'desconocido');
+  el.style.color = ok ? '#2e7d32' : '#c0392b';
+}
+
+function cargarDesdeSheet(callback){
+  fetch(APPS_SCRIPT_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var todos = data.trabajos || [];
+      TRABAJOS = todos.filter(function(t){ return !t.archivado; });
+      HISTORIAL = todos.filter(function(t){ return t.archivado; });
+      marcarSincronizado(true);
+      if(callback) callback();
+    })
+    .catch(function(err){
+      marcarSincronizado(false, 'No se pudo conectar (GET): '+(err&&err.message));
+      if(callback) callback();
+    });
+}
+
+// ── LOCAL STORAGE ──────────────────────────────────────────────
+var STORAGE_KEY = 'akapol_trabajos_v1';
+
+function cl(v){ return String(v===null||v===undefined?'':v).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim(); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmtDate(d){ if(!d)return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function nomTec(leg){ var t=TECNICOS.find(function(x){return x.leg===leg;}); return t?t.ap+', '+t.nom:leg||'—'; }
+function iniTec(leg){ var t=TECNICOS.find(function(x){return x.leg===leg;}); return t?t.ini:'?'; }
+function fmtTiempo(ini,fin){
+  if(!ini||!fin)return '—';
+  var h1=parseInt(ini.split(':')[0]),m1=parseInt(ini.split(':')[1]);
+  var h2=parseInt(fin.split(':')[0]),m2=parseInt(fin.split(':')[1]);
+  var mins=(h2*60+m2)-(h1*60+m1);
+  if(mins<0)mins+=1440;
+  return (Math.floor(mins/60)>0?Math.floor(mins/60)+' hs ':'')+(mins%60>0?mins%60+' min':'0 min');
+}
+function tiempoMins(ini,fin){
+  if(!ini||!fin)return 0;
+  var h1=parseInt(ini.split(':')[0]),m1=parseInt(ini.split(':')[1]);
+  var h2=parseInt(fin.split(':')[0]),m2=parseInt(fin.split(':')[1]);
+  var m=(h2*60+m2)-(h1*60+m1);
+  return m<0?m+1440:m;
+}
+
+function init(){
+  var sel=document.getElementById('selTec');
+  var hf=document.getElementById('hfTec');
+  TECNICOS.forEach(function(t){
+    var o=document.createElement('option');
+    o.value=t.leg; o.textContent=t.ap+', '+t.nom+' ('+t.ini+')';
+    sel.appendChild(o.cloneNode(true));
+    hf.appendChild(o);
+  });
+  document.getElementById('f_fpedido').value=today();
+  document.getElementById('t_freali').value=today();
+
+  // Cargar datos desde la planilla compartida (tiempo real)
+  renderKPIs();
+  renderTodos();
+  renderHistorial();
+  cargarDesdeSheet(function(){
+    renderKPIs(); renderTodos(); renderHistorial();
+    if(document.getElementById('selTec').value) renderVistaTec();
+  });
+  setInterval(function(){
+    cargarDesdeSheet(function(){
+      renderKPIs(); renderTodos(); renderHistorial();
+      if(document.getElementById('selTec').value) renderVistaTec();
+    });
+  }, 20000);
+
+  // Setup import zone events
+  var dz=document.getElementById('dropZ');
+  dz.onclick=function(){ document.getElementById('fImp').click(); };
+  dz.ondragover=function(e){ e.preventDefault(); this.classList.add('drag'); };
+  dz.ondragleave=function(){ this.classList.remove('drag'); };
+  dz.ondrop=function(e){ e.preventDefault(); this.classList.remove('drag'); doImport(e.dataTransfer.files[0]); };
+  document.getElementById('fImp').onchange=function(){ doImport(this.files[0]); };
+
+  renderKPIs();
+  goTab(1);
+}
+
+// ── TABS ──
+function goTab(n){
+  for(var i=0;i<5;i++){
+    document.getElementById('t'+i).className='tab'+(i===n?' on':'');
+    document.getElementById('p'+i).className='pnl'+(i===n?' on':'');
+  }
+  if(n===0) renderTodos();
+  if(n===1) renderVistaTec();
+  if(n===2) renderHistorial();
+  if(n===3) renderEstadisticas();
+}
+
+// ── KPIS ──
+function renderKPIs(){
+  var el=document.getElementById('krow2');
+  if(!el)return;
+  var tot=TRABAJOS.length,pen=0,pro=0,fin=0;
+  TRABAJOS.forEach(function(t){
+    if(t.estado==='Pendiente')pen++;
+    else if(t.estado==='En proceso')pro++;
+    else if(t.estado==='Finalizado')fin++;
+  });
+  el.innerHTML=
+    '<div class="kc kc-tot"><div class="kl">Total activos</div><div class="kv">'+tot+'</div><div class="ks">trabajos</div></div>'+
+    '<div class="kc kc-pen"><div class="kl">Pendientes</div><div class="kv">'+pen+'</div><div class="ks">sin iniciar</div></div>'+
+    '<div class="kc kc-pro"><div class="kl">En proceso</div><div class="kv">'+pro+'</div><div class="ks">en ejecución</div></div>'+
+    '<div class="kc kc-fin"><div class="kl">Finalizados</div><div class="kv">'+fin+'</div><div class="ks">pendientes de archivar</div></div>'+
+    '<div class="kc kc-his"><div class="kl">Historial</div><div class="kv">'+HISTORIAL.length+'</div><div class="ks">antecedentes</div></div>';
+}
+
+// ── IMPORT ──
+function lgImp(msg,cls){
+  var el=document.getElementById('impLog');
+  el.style.display='block';
+  var d=document.createElement('div');
+  d.innerHTML=msg; if(cls)d.className=cls;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+
+function doImport(file){
+  if(!file)return;
+  document.getElementById('impLog').innerHTML='';
+  document.getElementById('impLog').style.display='block';
+  lgImp('Leyendo: <strong>'+file.name+'</strong>');
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var wb=XLSX.read(ev.target.result,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(rows.length<2){lgImp('Sin datos','er');return;}
+      var hdr=rows[0];
+      var ci={desc:-1,tipo:-1,prio:-1,sector:-1,fecha:-1};
+      for(var h=0;h<hdr.length;h++){
+        var n=cl(hdr[h]).toLowerCase();
+        if(n.indexOf('desc')>=0)ci.desc=h;
+        else if(n.indexOf('tipo')>=0)ci.tipo=h;
+        else if(n.indexOf('prior')>=0)ci.prio=h;
+        else if(n.indexOf('sector')>=0)ci.sector=h;
+        else if(n.indexOf('fecha')>=0||n.indexOf('solicit')>=0)ci.fecha=h;
+      }
+      var maxId=TRABAJOS.length?Math.max.apply(null,TRABAJOS.map(function(t){return t.id;})):0;
+      var count=0;
+      for(var i=1;i<rows.length;i++){
+        var r=rows[i];
+        var desc=ci.desc>=0?cl(r[ci.desc]):'';
+        if(!desc)continue;
+        var tipo=ci.tipo>=0?cl(r[ci.tipo]):'Mecanico';
+        var prio=ci.prio>=0?cl(r[ci.prio]):'Media';
+        var sector=ci.sector>=0?cl(r[ci.sector]):'';
+        var fecha=ci.fecha>=0?cl(r[ci.fecha]):'';
+        if(fecha&&fecha.indexOf('/')>=0){var p=fecha.split('/');fecha=p[2]+'-'+p[1]+'-'+p[0];}
+        maxId++;
+        var nuevoImport={id:maxId,desc:desc,tipo:tipo,prio:prio,sector:sector,
+          fpedido:fecha||today(),tecnico:'',tercero:'',freali:'',
+          hora_inicio:'',hora_fin:'',estado:'Pendiente',quehizo:'',created:today()};
+        TRABAJOS.push(nuevoImport);
+        sincronizar('nuevo', {desc:desc, tipo:tipo, prio:prio, sector:sector, fpedido:nuevoImport.fpedido, tercero:'', created:nuevoImport.created});
+        count++;
+      }
+      lgImp(count+' trabajos importados','ok');
+      renderKPIs();
+      toast(count+' trabajos importados');
+      setTimeout(function(){goTab(0);},1200);
+    }catch(err){lgImp('Error: '+err.message,'er');}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function descargarPlantilla(){
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet([
+    ['Descripcion','Tipo','Prioridad','Sector','Fecha Solicitud'],
+    ['Cambio de correa linea JA00054','Mecanico','Alta','Produccion','2026-06-19'],
+    ['Revision tablero electrico','Electrico','Media','Sala de Maquinas','2026-06-19'],
+  ]);
+  ws['!cols']=[{wch:45},{wch:12},{wch:10},{wch:18},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws,'Trabajos');
+  XLSX.writeFile(wb,'plantilla_trabajos.xlsx');
+  toast('Plantilla descargada');
+}
+
+// ── VISTA TECNICO ──
+function onTecChange(){
+  var leg=document.getElementById('selTec').value;
+  document.getElementById('tecAvatar').textContent=leg?iniTec(leg):'—';
+  renderVistaTec();
+}
+
+function renderVistaTec(){
+  var el=document.getElementById('wTec');
+  var leg=document.getElementById('selTec').value;
+  if(!leg){el.innerHTML='<div class="empty"><div class="ic">👷</div>Seleccioná tu nombre para ver los trabajos.</div>';return;}
+  var disponibles=TRABAJOS.filter(function(t){return t.estado!=='Finalizado'&&t.tecnico===leg;});
+  var finTec=HISTORIAL.filter(function(t){return t.tecnico===leg;}).length;
+  var tomTec=TRABAJOS.filter(function(t){return t.tecnico===leg;}).length;
+  document.getElementById('tecStats').textContent=tomTec+' tomados · '+finTec+' finalizados';
+  if(!disponibles.length){el.innerHTML='<div class="empty"><div class="ic">✅</div>No tenés trabajos asignados pendientes.</div>';return;}
+  var tec=TECNICOS.find(function(t){return t.leg===leg;});
+  var nuevos=disponibles.filter(function(t){return !t.vistoPorTecnico;});
+  var html='<div style="font-size:12px;color:var(--mu);margin-bottom:14px">Trabajos disponibles para <strong style="color:var(--tx)">'+tec.ap+', '+tec.nom+'</strong></div>';
+  if(nuevos.length){
+    html+='<div style="background:#fff3cd;border:1.5px solid #f0c14b;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700;color:#8a6100">🔔 Tenés '+nuevos.length+' trabajo(s) nuevo(s) asignado(s) por el supervisor.</div>';
+  }
+  disponibles.forEach(function(t){
+    var tomado=t.tecnico===leg;
+    var esNuevo=!t.vistoPorTecnico;
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
+    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':'👥 Ter';
+    var pbd=t.prio==='Alta'?'bd-pa':t.prio==='Baja'?'bd-pb':'bd-pm';
+    html+='<div class="trab-card'+(tomado?' tomado':'')+'" style="'+(esNuevo?'border-color:#f0c14b;background:#fffdf5':'')+'">'+ 
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">'+ 
+        '<div style="font-size:13px;font-weight:600;flex:1">'+(esNuevo?'<span style="background:#f0c14b;color:#4a3800;border-radius:4px;padding:1px 7px;font-size:9px;font-weight:800;margin-right:6px;vertical-align:middle">🔔 NUEVO</span>':'')+t.desc+'</div>'+ 
+        '<div style="display:flex;gap:6px"><span class="bd '+tbd+'">'+tbl+'</span><span class="bd '+pbd+'">'+t.prio+'</span></div>'+ 
+      '</div>'+ 
+      '<div style="font-size:11px;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">'+ 
+        (t.sector?'<span>📍 '+t.sector+'</span>':'')+
+        '<span>📅 '+fmtDate(t.fpedido)+'</span>'+
+        (t.estado==='A continuar'?'<span style="color:#58a6ff;font-weight:600">⏸ A continuar</span>':'')+
+        (t.hora_inicio&&t.hora_fin?'<span style="color:var(--ac)">⏱ '+fmtTiempo(t.hora_inicio,t.hora_fin)+'</span>':'')+
+        '<span style="color:var(--or)">👷 Asignado a vos</span>'+
+        (t.quehizo?'<span style="color:var(--gn)">✓ '+t.quehizo.slice(0,50)+'</span>':'')+
+      '</div>'+ 
+      '<div style="display:flex;gap:8px">';
+    html+='<button class="btn btn-sm" data-id="'+t.id+'" data-leg="'+leg+'" onclick="abrirTomar(parseInt(this.dataset.id),this.dataset.leg)">📝 Completar / Finalizar</button>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ── TOMAR ──
+function abrirTomar(id,leg){
+  var t=TRABAJOS.find(function(x){return x.id===id;}); if(!t)return;
+  TOMAR_ID=id; TOMAR_TEC=leg;
+  if(!t.vistoPorTecnico){
+    t.vistoPorTecnico=true;
+    sincronizar('marcarVisto', {id:id});
+  }
+  var tec=TECNICOS.find(function(x){return x.leg===leg;});
+  document.getElementById('mTomarTitle').textContent='Trabajo #'+String(id).padStart(4,'0');
+  var prevHtml='';
+  if(t.intervenciones&&t.intervenciones.length){
+    prevHtml='<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Intervenciones anteriores</div>';
+    t.intervenciones.forEach(function(iv){
+      prevHtml+='<div style="background:var(--s3);border-radius:6px;padding:10px 12px;margin-bottom:6px;font-size:11px">';
+      prevHtml+='<span style="font-weight:600;color:var(--ac)">👷 '+iv.nomTecnico+'</span>';
+      if(iv.freali) prevHtml+=' · <span style="color:var(--mu)">'+fmtDate(iv.freali)+'</span>';
+      if(iv.tiempo&&iv.tiempo!=='—') prevHtml+=' · <span style="color:var(--ac)">⏱ '+iv.tiempo+'</span>';
+      prevHtml+='<div style="color:var(--tx);margin-top:4px">'+iv.quehizo+'</div></div>';
+    });
+    prevHtml+='</div>';
+  }
+  document.getElementById('mTomarBody').innerHTML=
+    '<div style="background:var(--s2);border-radius:8px;padding:14px;margin-bottom:12px">'+ 
+      '<div style="font-weight:600;margin-bottom:4px">'+t.desc+'</div>'+
+      (t.sector?'<div style="font-size:11px;color:var(--mu)">📍 '+t.sector+'</div>':'')+
+      '<div style="font-size:11px;color:var(--mu);margin-top:4px">Técnico: '+tec.ap+', '+tec.nom+'</div>'+
+    '</div>'+prevHtml;
+  document.getElementById('t_quehizo').value=t.quehizo||'';
+  document.getElementById('t_freali').value=t.freali||today();
+  document.getElementById('t_estado').value=t.estado==='Finalizado'?'Finalizado':'En proceso';
+  document.getElementById('t_hini').value=t.hora_inicio||'';
+  document.getElementById('t_hfin').value=t.hora_fin||'';
+  document.getElementById('t_tfield').style.display='none';
+  calcT();
+  document.getElementById('mTomar').classList.add('open');
+}
+
+function calcT(){
+  var ini=document.getElementById('t_hini').value, fin=document.getElementById('t_hfin').value;
+  var f=document.getElementById('t_tfield'), v=document.getElementById('t_tval');
+  if(!ini||!fin){f.style.display='none';return;}
+  f.style.display='block'; v.textContent=fmtTiempo(ini,fin);
+}
+
+function confirmarTomar(){
+  var q=document.getElementById('t_quehizo').value.trim();
+  if(!q){toast('Describí qué se hizo o se está haciendo','#d29922');return;}
+  var idx=TRABAJOS.findIndex(function(t){return t.id===TOMAR_ID;}); if(idx<0)return;
+  var estado=document.getElementById('t_estado').value;
+  var freali=document.getElementById('t_freali').value;
+  var hini=document.getElementById('t_hini').value;
+  var hfin=document.getElementById('t_hfin').value;
+  var tiempo=fmtTiempo(hini,hfin);
+
+  // Save current tech's contribution before possibly reassigning
+  if(!TRABAJOS[idx].intervenciones) TRABAJOS[idx].intervenciones=[];
+  var existeEntry=TRABAJOS[idx].intervenciones.findIndex(function(iv){return iv.tecnico===TOMAR_TEC;});
+  var entry={
+    tecnico:TOMAR_TEC, nomTecnico:nomTec(TOMAR_TEC), quehizo:q,
+    freali:freali, hora_inicio:hini, hora_fin:hfin, tiempo:tiempo
+  };
+  if(existeEntry>=0) TRABAJOS[idx].intervenciones[existeEntry]=entry;
+  else TRABAJOS[idx].intervenciones.push(entry);
+
+  TRABAJOS[idx].tecnico=TOMAR_TEC;
+  TRABAJOS[idx].quehizo=q;
+  TRABAJOS[idx].freali=freali;
+  TRABAJOS[idx].hora_inicio=hini;
+  TRABAJOS[idx].hora_fin=hfin;
+  TRABAJOS[idx].estado=estado;
+  TRABAJOS[idx].vistoPorTecnico=true;
+
+  var payload={id:TOMAR_ID, tecnico:TOMAR_TEC, nomTecnico:nomTec(TOMAR_TEC), quehizo:q, freali:freali, hora_inicio:hini, hora_fin:hfin, tiempo:tiempo, estado:estado};
+
+  if(estado==='Finalizado'){
+    var t=TRABAJOS[idx];
+    t.fechaArchivado=today();
+    t.archivado=true;
+    HISTORIAL.push(JSON.parse(JSON.stringify(t)));
+    TRABAJOS.splice(idx,1);
+    toast('✅ Trabajo finalizado y archivado');
+    closeM('mTomar');
+    // Reset tech selector so another tech can log in
+    document.getElementById('selTec').value='';
+    document.getElementById('tecAvatar').textContent='—';
+    document.getElementById('tecStats').textContent='';
+    document.getElementById('wTec').innerHTML='<div class="empty"><div class="ic">👷</div>Seleccioná tu nombre para ver los trabajos disponibles.</div>';
+  } else if(estado==='A continuar'){
+    TRABAJOS[idx].tecnico='';
+    toast('⏸ Trabajo guardado — el supervisor asignará quién continúa');
+    closeM('mTomar');
+    renderVistaTec();
+  } else {
+    toast('Trabajo actualizado');
+    closeM('mTomar');
+    renderVistaTec();
+  }
+  renderKPIs();
+  sincronizar('tomar', payload);
+}
+
+// ── TODOS ──
+function renderTodos(){
+  var srch=(document.getElementById('srch2')||{value:''}).value.toLowerCase();
+  var fT=(document.getElementById('fTipo2')||{value:''}).value;
+  var fE=(document.getElementById('fEst2')||{value:''}).value;
+  var items=TRABAJOS.filter(function(t){
+    if(fT&&t.tipo!==fT)return false;
+    if(fE&&t.estado!==fE)return false;
+    if(srch&&(t.desc+' '+t.sector).toLowerCase().indexOf(srch)<0)return false;
+    return true;
+  });
+  var cnt=document.getElementById('cnt2');
+  if(cnt)cnt.textContent=items.length+' trabajo(s)';
+  var el=document.getElementById('wTodos2'); if(!el)return;
+  if(!items.length){el.innerHTML='<div class="empty"><div class="ic">📋</div>Sin trabajos.</div>';return;}
+  var rows=items.map(function(t){
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
+    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':'👥 Ter';
+    var ebd=t.estado==='Pendiente'?'bd-pen':t.estado==='En proceso'?'bd-pro':t.estado==='A continuar'?'bd-cont':'bd-fin';
+    var asig=t.tipo==='Tercero'?(t.tercero||'—'):t.tipo==='Intendencia'?'Intendencia':(t.tecnico?nomTec(t.tecnico).split(',')[0]:'Sin asignar');
+    return '<tr>'+
+      '<td style="font-family:Space Mono,monospace;font-size:10px;color:var(--mu)">#'+String(t.id).padStart(4,'0')+'</td>'+
+      '<td style="max-width:260px"><div style="font-weight:500">'+t.desc+'</div>'+(t.sector?'<div style="font-size:10px;color:var(--mu)">'+t.sector+'</div>':'')+'</td>'+
+      '<td><span class="bd '+tbd+'">'+tbl+'</span></td>'+
+      '<td style="font-size:12px">'+asig+'</td>'+
+      '<td style="font-family:Space Mono,monospace;font-size:11px">'+fmtDate(t.fpedido)+'</td>'+
+      '<td><span class="bd '+ebd+'">'+t.estado+'</span></td>'+
+      '<td>'+(t.quehizo?'<span style="color:var(--gn);font-size:11px">✓</span>':'<span style="color:var(--mu);font-size:11px">—</span>')+'</td>'+
+      '<td onclick="event.stopPropagation()" style="white-space:nowrap">'+
+        (SUP_ACTIVO!==''?'<button class="btn-o btn-xs" onclick="event.stopPropagation();abrirAsignar('+t.id+')" title="Asignar técnico" style="color:var(--ac)">👷 Asignar</button> ':'')+
+        '<button class="btn-o btn-xs" onclick="event.stopPropagation();editarTrabajo('+t.id+')" title="Editar">✏️</button> '+
+        '<button class="btn-o btn-xs" style="color:var(--rd)" onclick="event.stopPropagation();eliminarTrabajo('+t.id+')" title="Eliminar">🗑</button>'+
+        (t.estado==='Finalizado'?'<button class="btn-o btn-xs" style="color:var(--gn);margin-left:4px" onclick="archivarTrabajo('+t.id+')" title="Archivar">📦</button>':'')+'</td>'+
+      '</tr>';
+  }).join('');
+  el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>#</th><th>Descripción</th><th>Tipo</th><th>Asignado a</th><th>F. Pedido</th><th>Estado</th><th>¿Qué se hizo?</th><th style="text-align:center">Acciones</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  renderKPIs();
+}
+
+function archivarTrabajo(id){
+  var idx=TRABAJOS.findIndex(function(t){return t.id===id;}); if(idx<0)return;
+  var t=TRABAJOS[idx]; t.fechaArchivado=today(); t.archivado=true;
+  HISTORIAL.push(JSON.parse(JSON.stringify(t)));
+  TRABAJOS.splice(idx,1);
+  renderTodos(); renderKPIs(); toast('📦 Archivado en historial');
+  sincronizar('archivar', {id:id});
+}
+
+function eliminarTrabajo(id){
+  if(!confirm('Eliminar este trabajo?'))return;
+  TRABAJOS=TRABAJOS.filter(function(t){return t.id!==id;});
+  renderTodos(); renderKPIs(); toast('Trabajo eliminado');
+  sincronizar('eliminar', {id:id});
+}
+
+function editarTrabajo(id){
+  var t=TRABAJOS.find(function(x){return x.id===id;}); if(!t)return;
+  EDIT_ID=id;
+  document.getElementById('mNTitle').textContent='Editar #'+String(id).padStart(4,'0');
+  document.getElementById('f_desc').value=t.desc||'';
+  document.getElementById('f_tipo').value=t.tipo||'';
+  document.getElementById('f_prio').value=t.prio||'Media';
+  document.getElementById('f_sector').value=t.sector||'';
+  document.getElementById('f_fpedido').value=t.fpedido||'';
+  onTipoChange();
+  document.getElementById('mNuevo').classList.add('open');
+}
+
+function openNuevo(){
+  EDIT_ID=null;
+  document.getElementById('mNTitle').textContent='Nuevo trabajo';
+  ['f_desc','f_sector','f_tercero'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f_tipo').value='';
+  document.getElementById('f_prio').value='Media';
+  document.getElementById('f_fpedido').value=today();
+  onTipoChange();
+  document.getElementById('mNuevo').classList.add('open');
+}
+
+function onTipoChange(){
+  document.getElementById('grp_ter').style.display=document.getElementById('f_tipo').value==='Tercero'?'block':'none';
+}
+
+function guardarTrabajo(){
+  var desc=document.getElementById('f_desc').value.trim();
+  var tipo=document.getElementById('f_tipo').value;
+  if(!desc){toast('Completá la descripción','#d29922');return;}
+  if(!tipo){toast('Seleccioná el tipo','#d29922');return;}
+  var maxId=TRABAJOS.length?Math.max.apply(null,TRABAJOS.map(function(t){return t.id;})):0;
+  var prev=EDIT_ID?TRABAJOS.find(function(t){return t.id===EDIT_ID;})||{}:{};
+  var prio=document.getElementById('f_prio').value;
+  var sector=document.getElementById('f_sector').value.trim();
+  var fpedido=document.getElementById('f_fpedido').value;
+  var tercero=tipo==='Tercero'?document.getElementById('f_tercero').value:'';
+  var obj={
+    id:EDIT_ID||(maxId+1), desc:desc, tipo:tipo,
+    prio:prio, sector:sector, fpedido:fpedido,
+    tecnico:prev.tecnico||'', tercero:tercero,
+    freali:prev.freali||'', hora_inicio:prev.hora_inicio||'', hora_fin:prev.hora_fin||'',
+    estado:prev.estado||'Pendiente', quehizo:prev.quehizo||'', created:prev.created||today()
+  };
+  if(EDIT_ID){
+    var i=TRABAJOS.findIndex(function(t){return t.id===EDIT_ID;});TRABAJOS[i]=obj;toast('Trabajo actualizado');
+    sincronizar('editar', {id:EDIT_ID, desc:desc, tipo:tipo, prio:prio, sector:sector, fpedido:fpedido, tercero:tercero});
+  } else {
+    TRABAJOS.unshift(obj);toast('Trabajo agregado');
+    sincronizar('nuevo', {desc:desc, tipo:tipo, prio:prio, sector:sector, fpedido:fpedido, tercero:tercero, created:obj.created});
+  }
+  closeM('mNuevo'); renderTodos(); renderKPIs();
+}
+
+// ── HISTORIAL ──
+function renderHistorial(){
+  var fTec=(document.getElementById('hfTec')||{value:''}).value;
+  var fTipo=(document.getElementById('hfTipo')||{value:''}).value;
+  var fMes=(document.getElementById('hfMes')||{value:''}).value;
+  var items=HISTORIAL.filter(function(t){
+    if(fTec&&t.tecnico!==fTec)return false;
+    if(fTipo&&t.tipo!==fTipo)return false;
+    if(fMes&&t.freali&&t.freali.slice(0,7)!==fMes)return false;
+    return true;
+  }).sort(function(a,b){return (b.freali||b.fechaArchivado||'')>(a.freali||a.fechaArchivado||'')?1:-1;});
+  var cnt=document.getElementById('hCnt');
+  if(cnt)cnt.textContent=items.length+' antecedente(s)';
+  var el=document.getElementById('wHist'); if(!el)return;
+  if(!HISTORIAL.length){el.innerHTML='<div class="empty"><div class="ic">📊</div>El historial está vacío. Los trabajos finalizados aparecerán aquí.</div>';return;}
+  if(!items.length){el.innerHTML='<div class="empty"><div class="ic">🔍</div>Sin resultados con los filtros aplicados.</div>';return;}
+  var rows=items.map(function(t){
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
+    return '<tr>'+
+      '<td style="font-family:Space Mono,monospace;font-size:10px;color:var(--mu)">#'+String(t.id).padStart(4,'0')+'</td>'+
+      '<td style="max-width:220px"><div style="font-weight:500">'+t.desc+'</div>'+(t.sector?'<div style="font-size:10px;color:var(--mu)">'+t.sector+'</div>':'')+'</td>'+
+      '<td><span class="bd '+tbd+'">'+t.tipo+'</span></td>'+
+      '<td style="font-size:12px">'+(t.tecnico?nomTec(t.tecnico).split(',')[0]:t.tercero||'—')+'</td>'+
+      '<td style="font-family:Space Mono,monospace;font-size:11px">'+fmtDate(t.freali)+'</td>'+
+      '<td style="font-family:Space Mono,monospace;font-size:11px;color:var(--ac)">'+(t.hora_inicio&&t.hora_fin?fmtTiempo(t.hora_inicio,t.hora_fin):'—')+'</td>'+
+      '<td style="font-size:11px;max-width:220px">'+(function(){
+        if(t.intervenciones&&t.intervenciones.length>1){
+          return t.intervenciones.map(function(iv,i){
+            return '<div style="'+(i>0?'border-top:1px solid var(--br);margin-top:4px;padding-top:4px':'')+'">'
+              +'<span style="color:var(--ac);font-size:10px">'+iv.nomTecnico.split(',')[0]+':</span> '
+              +'<span style="color:var(--mu)">'+iv.quehizo.slice(0,60)+'</span></div>';
+          }).join('');
+        }
+        return '<span style="color:var(--mu)">'+(t.quehizo||'—')+'</span>';
+      }())+'</td>'+
+      '</tr>';
+  }).join('');
+  el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>#</th><th>Trabajo</th><th>Tipo</th><th>Técnico</th><th>F. Realización</th><th>Tiempo</th><th>¿Qué se hizo?</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function expHistorial(){
+  var todos=HISTORIAL.concat(TRABAJOS.filter(function(t){return t.estado==='Finalizado';}));
+  if(!todos.length){toast('No hay trabajos finalizados','#d29922');return;}
+  var hdrs=['#','Descripcion','Tipo','Sector','Tecnico','F. Pedido','F. Realizacion','Tiempo','Que se hizo'];
+  var rows=todos.map(function(t){return[
+    '#'+String(t.id).padStart(4,'0'),t.desc,t.tipo,t.sector||'',
+    t.tecnico?nomTec(t.tecnico):(t.tercero||''),
+    t.fpedido||'',t.freali||'',
+    (t.hora_inicio&&t.hora_fin?fmtTiempo(t.hora_inicio,t.hora_fin):''),
+    t.quehizo||''
+  ];});
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet([hdrs].concat(rows));
+  ws['!cols']=[{wch:6},{wch:40},{wch:12},{wch:16},{wch:24},{wch:12},{wch:12},{wch:10},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws,'Finalizados');
+  XLSX.writeFile(wb,'Trabajos_Finalizados_'+today()+'.xlsx');
+  toast('Excel exportado: '+todos.length+' trabajos');
+}
+
+// ── ESTADÍSTICAS ──
+function renderEstadisticas(){
+  Object.values(sCH).forEach(function(c){try{c.destroy();}catch(e){}});
+  sCH={};
+
+  // Bail if canvases not in DOM yet
+  if(!document.getElementById('chTec')) return;
+  Chart.defaults.color='#aaaaaa';
+  Chart.defaults.borderColor='#4a4a4a';
+  Chart.defaults.font.family='Inter';
+
+  var todos=TRABAJOS.concat(HISTORIAL);
+
+  // 1. Por técnico: tomados vs finalizados
+  var tecMap={};
+  todos.forEach(function(t){
+    if(!t.tecnico)return;
+    if(!tecMap[t.tecnico])tecMap[t.tecnico]={tomados:0,finalizados:0};
+    tecMap[t.tecnico].tomados++;
+    if(t.estado==='Finalizado'||HISTORIAL.find(function(h){return h.id===t.id;}))
+      tecMap[t.tecnico].finalizados++;
+  });
+  // Use historial for finalizados count
+  HISTORIAL.forEach(function(t){
+    if(!t.tecnico)return;
+    if(!tecMap[t.tecnico])tecMap[t.tecnico]={tomados:0,finalizados:0};
+    tecMap[t.tecnico].finalizados++;
+  });
+  // Recalc tomados from all
+  Object.keys(tecMap).forEach(function(leg){tecMap[leg].tomados=todos.filter(function(t){return t.tecnico===leg;}).length+HISTORIAL.filter(function(t){return t.tecnico===leg;}).length;});
+  
+  var tecLegs=Object.keys(tecMap).filter(function(l){return tecMap[l].tomados>0;}).sort(function(a,b){return tecMap[b].tomados-tecMap[a].tomados;});
+  var tecLabels=tecLegs.map(function(l){var t=TECNICOS.find(function(x){return x.leg===l;});return t?t.ini:l;});
+
+  if(tecLegs.length){
+    sCH.tec=new Chart(document.getElementById('chTec'),{
+      type:'bar',
+      data:{labels:tecLabels,datasets:[
+        {label:'Tomados',data:tecLegs.map(function(l){return tecMap[l].tomados;}),backgroundColor:'rgba(184,120,90,.55)',borderColor:'#d85a30',borderWidth:1,borderRadius:3},
+        {label:'Finalizados',data:tecLegs.map(function(l){return tecMap[l].finalizados;}),backgroundColor:'rgba(74,158,92,.55)',borderColor:'#3fb950',borderWidth:1,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{size:11},usePointStyle:true}}},
+        scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}}}}}
+    });
+  }
+
+  // 2. Por tipo - donut
+  var tipos={Mecanico:0,Electrico:0,Ambos:0,Tercero:0};
+  todos.concat(HISTORIAL).forEach(function(t){if(tipos[t.tipo]!==undefined)tipos[t.tipo]++;});
+  sCH.tipo=new Chart(document.getElementById('chTipo'),{
+    type:'doughnut',
+    data:{labels:['Mecánico','Eléctrico','Ambos','Tercero'],
+      datasets:[{data:[tipos.Mecanico,tipos.Electrico,tipos.Ambos,tipos.Tercero],
+        backgroundColor:['#f85149','#f0883e','#d85a30','#bc8cff'],
+        borderColor:'#2d2d2d',borderWidth:3,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+c.parsed;}}}}}
+  });
+
+  // 3. Estado actual - bar horizontal
+  var pen=TRABAJOS.filter(function(t){return t.estado==='Pendiente';}).length;
+  var pro=TRABAJOS.filter(function(t){return t.estado==='En proceso';}).length;
+  var fin=TRABAJOS.filter(function(t){return t.estado==='Finalizado';}).length;
+  var his=HISTORIAL.length;
+  sCH.est=new Chart(document.getElementById('chEst'),{
+    type:'bar',
+    data:{labels:['Pendiente','En proceso','Finalizado (activos)','Historial'],
+      datasets:[{label:'Trabajos',data:[pen,pro,fin,his],
+        backgroundColor:['rgba(168,138,58,.60)','rgba(192,120,72,.60)','rgba(74,158,92,.60)','rgba(144,112,192,.60)'],
+        borderColor:['#d29922','#f0883e','#3fb950','#bc8cff'],
+        borderWidth:1,borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+
+  // 4. Tiempo promedio por técnico
+  var tecTime={};
+  HISTORIAL.forEach(function(t){
+    if(!t.tecnico||!t.hora_inicio||!t.hora_fin)return;
+    if(!tecTime[t.tecnico])tecTime[t.tecnico]={total:0,count:0};
+    tecTime[t.tecnico].total+=tiempoMins(t.hora_inicio,t.hora_fin);
+    tecTime[t.tecnico].count++;
+  });
+  var timeLegs=Object.keys(tecTime).filter(function(l){return tecTime[l].count>0;});
+  if(timeLegs.length){
+    var timeLabels=timeLegs.map(function(l){var t=TECNICOS.find(function(x){return x.leg===l;});return t?t.ini:l;});
+    var timeData=timeLegs.map(function(l){return Math.round(tecTime[l].total/tecTime[l].count);});
+    sCH.time=new Chart(document.getElementById('chTime'),{
+      type:'bar',
+      data:{labels:timeLabels,datasets:[{label:'Minutos promedio',data:timeData,
+        backgroundColor:'rgba(184,120,90,.55)',borderColor:'#d85a30',borderWidth:1,borderRadius:3,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var m=c.parsed.y;return ' '+Math.floor(m/60)+'hs '+m%60+'min';}}}} ,
+        scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true,title:{display:true,text:'Minutos',font:{size:10}},ticks:{font:{size:10}}}}}
+    });
+  } else {
+    var chTimeEl=document.getElementById('chTime');
+    if(chTimeEl&&chTimeEl.parentElement){
+      chTimeEl.parentElement.innerHTML='<div class="empty" style="padding:40px 0"><div class="ic">⏱</div>Sin datos de tiempo registrados aún.</div>';
+    }
+  }
+}
+
+// ── SUPERVISOR ──
+var SUP_ACTIVO = '';
+
+function abrirSupSelector(){
+  document.getElementById('mSupSel').classList.add('open');
+}
+
+function activarSupervisor(leg){
+  SUP_ACTIVO = leg;
+  closeM('mSupSel');
+  // Unlock Todos tab
+  var t0 = document.getElementById('t0');
+  t0.style.opacity='1';
+  t0.style.pointerEvents='auto';
+  t0.title='';
+  // Show/hide buttons
+  document.getElementById('supBadge').style.display='inline-flex';
+  document.getElementById('supNom').textContent=iniSup(leg)+' — '+nomSup(leg).split(',')[0];
+  document.getElementById('btnSupAcceso').style.display='none';
+  document.getElementById('btnSupSalir').style.display='inline-block';
+  document.getElementById('btnNuevo').style.display='inline-block';
+  toast('✅ Bienvenido '+nomSup(leg).split(',')[1].trim());
+  goTab(0);
+}
+
+function salirSupervisor(){
+  SUP_ACTIVO='';
+  var t0=document.getElementById('t0');
+  t0.style.opacity='.35';
+  t0.style.pointerEvents='none';
+  t0.title='Solo supervisores';
+  document.getElementById('supBadge').style.display='none';
+  document.getElementById('btnSupAcceso').style.display='inline-block';
+  document.getElementById('btnSupSalir').style.display='none';
+  document.getElementById('btnNuevo').style.display='none';
+  if(document.getElementById('t0').classList.contains('on')) goTab(1);
+  toast('Sesión supervisor cerrada');
+}
+
+// ── ASIGNAR ──
+var ASIGNAR_ID = null;
+function abrirAsignar(id){
+  var t=TRABAJOS.find(function(x){return x.id===id;}); if(!t)return;
+  ASIGNAR_ID=id;
+  document.getElementById('mAsignarTitle').textContent='Asignar trabajo #'+String(id).padStart(4,'0');
+  document.getElementById('mAsignarBody').innerHTML=
+    '<div style="background:var(--s2);border-radius:8px;padding:12px;font-size:13px">'+
+      '<strong>'+t.desc+'</strong>'+
+      (t.sector?'<div style="font-size:11px;color:var(--mu);margin-top:4px">📍 '+t.sector+'</div>':'')+
+    '</div>';
+  // Populate tecnico select
+  var sel=document.getElementById('a_tecnico');
+  sel.innerHTML='<option value="">— Seleccionar técnico —</option>';
+  TECNICOS.forEach(function(tc){
+    var o=document.createElement('option');
+    o.value=tc.leg;
+    o.textContent=tc.ap+', '+tc.nom+' ('+tc.ini+')';
+    if(t.tecnico===tc.leg) o.selected=true;
+    sel.appendChild(o);
+  });
+  document.getElementById('mAsignar').classList.add('open');
+}
+
+function confirmarAsignar(){
+  var leg=document.getElementById('a_tecnico').value;
+  if(!leg){toast('Seleccioná un técnico','#d29922');return;}
+  var idx=TRABAJOS.findIndex(function(t){return t.id===ASIGNAR_ID;}); if(idx<0)return;
+  var tec=TECNICOS.find(function(x){return x.leg===leg;});
+  TRABAJOS[idx].tecnico=leg;
+  TRABAJOS[idx].vistoPorTecnico=false;
+  closeM('mAsignar');
+  renderTodos();
+  toast('✅ Asignado a '+tec.ap+', '+tec.nom);
+  sincronizar('asignar', {id:ASIGNAR_ID, tecnico:leg});
+}
+
+// ── UTILS ──
+function closeM(id){document.getElementById(id).classList.remove('open');}
+window.addEventListener('click',function(e){
+  document.querySelectorAll('.modal-ov.open').forEach(function(m){if(e.target===m)m.classList.remove('open');});
+});
+function toast(msg,col){var t=document.getElementById('tst');t.textContent=msg;t.style.background=col||'#3fb950';t.style.color='#fff';t.className='tst show';setTimeout(function(){t.className='tst';},3000);}
+
+init();
+</script>
+</body>
+</html>
