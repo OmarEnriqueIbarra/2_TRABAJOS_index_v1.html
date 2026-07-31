@@ -156,6 +156,8 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
     <label style="font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em">Soy:</label>
     <select id="selTec" onchange="onTecChange()" style="min-width:260px;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px">
       <option value="">— Seleccionar técnico —</option>
+      <option value="Intendencia">🧹 Intendencia</option>
+      <option value="Proveedor Externo">👥 Proveedor Externo</option>
       <option value="__otro__">✏️ Otro / Personal de Intendencia</option>
     </select>
     <input type="text" id="selTecOtro" placeholder="Escribí tu nombre..." style="display:none;min-width:220px;background:var(--s2);border:1px solid var(--br);border-radius:6px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px">
@@ -280,6 +282,8 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
         <label class="fl">Asignar a</label>
         <select id="a_tecnico" class="fi" onchange="onAsignarTecChange()">
           <option value="">— Seleccionar técnico —</option>
+          <option value="Intendencia">🧹 Intendencia</option>
+          <option value="Proveedor Externo">👥 Proveedor Externo</option>
           <option value="__otro__">✏️ Otro / Personal de Intendencia</option>
         </select>
         <input type="text" id="a_tecnicoOtro" class="fi" placeholder="Escribí el nombre de la persona..." style="display:none;margin-top:8px">
