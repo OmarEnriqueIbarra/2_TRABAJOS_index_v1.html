@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
-:root{--bg:#5a5a5a;--s1:#4a4a4a;--s2:#525252;--s3:#5e5e5e;--br:#686868;--br2:#787878;--tx:#ffffff;--mu:#dddddd;--mu2:#cccccc;--ac:#b8785a;--gn:#4a9e5c;--yl:#a88a3a;--rd:#b85550;--or:#c07848;--pu:#9070c0;}
+:root{--bg:#f0ede8;--s1:#ffffff;--s2:#fffde7;--s3:#f5f2ee;--br:#dedad4;--br2:#c8c2ba;--tx:#1c1a17;--mu:#7a7570;--mu2:#948e87;--ac:#c45c1a;--gn:#2e7d32;--yl:#b8860b;--rd:#c0392b;--or:#c07848;--pu:#7d4e9e;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;}
 .hdr{background:var(--s1);border-bottom:1px solid var(--br);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}
@@ -69,6 +69,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .bd-amb{background:rgba(184,120,90,.12);color:var(--ac);}
 .bd-ter{background:rgba(144,112,192,.12);color:var(--pu);}
 .bd-int{background:rgba(80,140,120,.12);color:#2e8a6e;}
+.bd-edil{background:rgba(120,100,180,.12);color:#7d64b4;}
 .bd-pen{background:rgba(168,138,58,.12);color:var(--yl);}
 .bd-pro{background:rgba(192,120,72,.12);color:var(--or);}
 .bd-fin{background:rgba(74,158,92,.12);color:var(--gn);}
@@ -127,8 +128,8 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
   <button class="tab on" id="t0" onclick="goTab(0)" style="opacity:.35;pointer-events:none" title="Solo supervisores">📋 Todos</button>
   <button class="tab"    id="t1" onclick="goTab(1)">🔧 Vista Técnico</button>
   <button class="tab"    id="t2" onclick="goTab(2)">✅ Finalizados</button>
-  <button class="tab"    id="t3" onclick="goTab(3)">📊 Estadísticas</button>
-  <button class="tab"    id="t4" onclick="goTab(4)">📂 Importar</button>
+  <button class="tab"    id="t3" onclick="goTab(3)" style="opacity:.35;pointer-events:none" title="Solo supervisores">📊 Estadísticas</button>
+  <button class="tab"    id="t4" onclick="goTab(4)" style="opacity:.35;pointer-events:none" title="Solo supervisores">📂 Importar</button>
 </div>
 <div style="padding:6px 20px;font-size:11px;color:var(--mu)" id="estadoSync">Conectando con la planilla...</div>
 
@@ -229,16 +230,14 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
 
 <!-- MODAL SUPERVISOR -->
 <div class="modal-ov" id="mSupSel">
-  <div class="modal" style="width:400px">
+  <div class="modal" style="width:380px">
     <div class="modal-hdr"><h3>Acceso Supervisor</h3><button class="mc" onclick="closeM('mSupSel')">×</button></div>
     <div style="text-align:center;padding:8px 0 20px">
       <div style="font-size:36px;margin-bottom:12px">⭐</div>
-      <p style="font-size:13px;color:var(--mu);margin-bottom:18px">Seleccioná tu nombre para acceder como supervisor</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="btn-o" onclick="activarSupervisor('ZZ03359')" style="font-size:14px;padding:12px;border-color:var(--br2)">CORONEL, Matias Rodolfo</button>
-        <button class="btn-o" onclick="activarSupervisor('ZZ03072')" style="font-size:14px;padding:12px;border-color:var(--br2)">REYN, Luciano Benjamin</button>
-        <button class="btn-o" onclick="activarSupervisor('ZZ01604')" style="font-size:14px;padding:12px;border-color:var(--br2)">IBARRA, Omar Enrique</button>
-      </div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:18px">Ingresá tu número de legajo para acceder como supervisor</p>
+      <input type="text" id="supLegajoInput" class="fi" placeholder="Ej: ZZ01604" style="text-align:center;text-transform:uppercase;margin-bottom:10px" autocapitalize="characters" autocomplete="off">
+      <div id="supLegajoError" style="display:none;color:var(--rd);font-size:12px;font-weight:700;margin-bottom:10px">⚠️ Legajo no reconocido como supervisor</div>
+      <button class="btn" onclick="confirmarAccesoSupervisor()" style="width:100%">Ingresar</button>
     </div>
   </div>
 </div>
@@ -306,6 +305,7 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(
           <option value="Electrico">⚡ Eléctrico</option>
           <option value="Ambos">🔩⚡ Ambos</option>
           <option value="Intendencia">🧹 Intendencia</option>
+          <option value="Edilicios">🏢 Edilicios</option>
           <option value="Tercero">👥 Tercero</option>
         </select>
       </div>
@@ -426,6 +426,7 @@ function tiempoMins(ini,fin){
 }
 
 function init(){
+  document.getElementById('supLegajoInput').addEventListener('keydown', function(e){ if(e.key==='Enter') confirmarAccesoSupervisor(); });
   var sel=document.getElementById('selTec');
   var hf=document.getElementById('hfTec');
   TECNICOS.forEach(function(t){
@@ -621,8 +622,8 @@ function renderVistaTec(){
   disponibles.forEach(function(t){
     var tomado=t.tecnico===leg;
     var esNuevo=!t.vistoPorTecnico;
-    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
-    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':'👥 Ter';
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':t.tipo==='Edilicios'?'bd-edil':'bd-ter';
+    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':t.tipo==='Edilicios'?'🏢 Edil':'👥 Ter';
     var pbd=t.prio==='Alta'?'bd-pa':t.prio==='Baja'?'bd-pb':'bd-pm';
     html+='<div class="trab-card'+(tomado?' tomado':'')+'" style="'+(esNuevo?'border-color:#f0c14b;background:#fffdf5':'')+'">'+ 
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">'+ 
@@ -762,10 +763,10 @@ function renderTodos(){
   var el=document.getElementById('wTodos2'); if(!el)return;
   if(!items.length){el.innerHTML='<div class="empty"><div class="ic">📋</div>Sin trabajos.</div>';return;}
   var rows=items.map(function(t){
-    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
-    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':'👥 Ter';
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':t.tipo==='Edilicios'?'bd-edil':'bd-ter';
+    var tbl=t.tipo==='Mecanico'?'🔩 Mec':t.tipo==='Electrico'?'⚡ Elec':t.tipo==='Ambos'?'🔩⚡':t.tipo==='Intendencia'?'🧹 Inten':t.tipo==='Edilicios'?'🏢 Edil':'👥 Ter';
     var ebd=t.estado==='Pendiente'?'bd-pen':t.estado==='En proceso'?'bd-pro':t.estado==='A continuar'?'bd-cont':'bd-fin';
-    var asig=t.tipo==='Tercero'?(t.tercero||'—'):(t.tecnico?nomTec(t.tecnico).split(',')[0]:(t.tipo==='Intendencia'?'Intendencia':'Sin asignar'));
+    var asig=t.tipo==='Tercero'?(t.tercero||'—'):(t.tecnico?nomTec(t.tecnico).split(',')[0]:((t.tipo==='Intendencia'||t.tipo==='Edilicios')?t.tipo:'Sin asignar'));
     return '<tr>'+
       '<td style="font-family:Space Mono,monospace;font-size:10px;color:var(--mu)">#'+String(t.id).padStart(4,'0')+'</td>'+
       '<td style="max-width:260px"><div style="font-weight:500">'+t.desc+'</div>'+(t.sector?'<div style="font-size:10px;color:var(--mu)">'+t.sector+'</div>':'')+'</td>'+
@@ -876,7 +877,7 @@ function renderHistorial(){
   if(!HISTORIAL.length){el.innerHTML='<div class="empty"><div class="ic">📊</div>El historial está vacío. Los trabajos finalizados aparecerán aquí.</div>';return;}
   if(!items.length){el.innerHTML='<div class="empty"><div class="ic">🔍</div>Sin resultados con los filtros aplicados.</div>';return;}
   var rows=items.map(function(t){
-    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':'bd-ter';
+    var tbd=t.tipo==='Mecanico'?'bd-mec':t.tipo==='Electrico'?'bd-elec':t.tipo==='Ambos'?'bd-amb':t.tipo==='Intendencia'?'bd-int':t.tipo==='Edilicios'?'bd-edil':'bd-ter';
     return '<tr>'+
       '<td style="font-family:Space Mono,monospace;font-size:10px;color:var(--mu)">#'+String(t.id).padStart(4,'0')+'</td>'+
       '<td style="max-width:220px"><div style="font-weight:500">'+t.desc+'</div>'+(t.sector?'<div style="font-size:10px;color:var(--mu)">'+t.sector+'</div>':'')+'</td>'+
@@ -927,8 +928,8 @@ function renderEstadisticas(){
 
   // Bail if canvases not in DOM yet
   if(!document.getElementById('chTec')) return;
-  Chart.defaults.color='#aaaaaa';
-  Chart.defaults.borderColor='#4a4a4a';
+  Chart.defaults.color='#7a7570';
+  Chart.defaults.borderColor='#dedad4';
   Chart.defaults.font.family='Inter';
 
   var todos=TRABAJOS.concat(HISTORIAL);
@@ -1030,17 +1031,32 @@ function renderEstadisticas(){
 var SUP_ACTIVO = '';
 
 function abrirSupSelector(){
+  document.getElementById('supLegajoInput').value = '';
+  document.getElementById('supLegajoError').style.display = 'none';
   document.getElementById('mSupSel').classList.add('open');
+  setTimeout(function(){ document.getElementById('supLegajoInput').focus(); }, 100);
+}
+
+function confirmarAccesoSupervisor(){
+  var leg = document.getElementById('supLegajoInput').value.trim().toUpperCase();
+  if(!leg || !esSupervisor(leg)){
+    document.getElementById('supLegajoError').style.display = 'block';
+    return;
+  }
+  document.getElementById('supLegajoError').style.display = 'none';
+  activarSupervisor(leg);
 }
 
 function activarSupervisor(leg){
   SUP_ACTIVO = leg;
   closeM('mSupSel');
-  // Unlock Todos tab
-  var t0 = document.getElementById('t0');
-  t0.style.opacity='1';
-  t0.style.pointerEvents='auto';
-  t0.title='';
+  // Unlock Todos, Estadísticas e Importar
+  ['t0','t3','t4'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.style.opacity='1';
+    el.style.pointerEvents='auto';
+    el.title='';
+  });
   // Show/hide buttons
   document.getElementById('supBadge').style.display='inline-flex';
   document.getElementById('supNom').textContent=iniSup(leg)+' — '+nomSup(leg).split(',')[0];
@@ -1053,15 +1069,17 @@ function activarSupervisor(leg){
 
 function salirSupervisor(){
   SUP_ACTIVO='';
-  var t0=document.getElementById('t0');
-  t0.style.opacity='.35';
-  t0.style.pointerEvents='none';
-  t0.title='Solo supervisores';
+  ['t0','t3','t4'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.style.opacity='.35';
+    el.style.pointerEvents='none';
+    el.title='Solo supervisores';
+  });
   document.getElementById('supBadge').style.display='none';
   document.getElementById('btnSupAcceso').style.display='inline-block';
   document.getElementById('btnSupSalir').style.display='none';
   document.getElementById('btnNuevo').style.display='none';
-  if(document.getElementById('t0').classList.contains('on')) goTab(1);
+  if(['t0','t3','t4'].indexOf(document.querySelector('.tab.on') ? document.querySelector('.tab.on').id : '') !== -1) goTab(1);
   toast('Sesión supervisor cerrada');
 }
 
