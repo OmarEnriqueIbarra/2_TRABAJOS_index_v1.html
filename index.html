@@ -1100,7 +1100,10 @@ function abrirAsignar(id){
     '</div>';
   // Populate tecnico select
   var sel=document.getElementById('a_tecnico');
-  sel.innerHTML='<option value="">— Seleccionar técnico —</option>';
+  sel.innerHTML='<option value="">— Seleccionar técnico —</option>'+
+    '<option value="Intendencia">🧹 Intendencia</option>'+
+    '<option value="Proveedor Externo">👥 Proveedor Externo</option>'+
+    '<option value="__otro__">✏️ Otro / Personal de Intendencia</option>';
   TECNICOS.forEach(function(tc){
     var o=document.createElement('option');
     o.value=tc.leg;
@@ -1108,6 +1111,8 @@ function abrirAsignar(id){
     if(t.tecnico===tc.leg) o.selected=true;
     sel.appendChild(o);
   });
+  if(t.tecnico==='Intendencia'||t.tecnico==='Proveedor Externo') sel.value=t.tecnico;
+  document.getElementById('a_tecnicoOtro').style.display='none';
   document.getElementById('mAsignar').classList.add('open');
 }
 
